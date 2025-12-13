@@ -556,6 +556,8 @@ echo "allow samba"
 #sudo ufw allow from 192.168.0.0/24 to any app Samba  comment 'passing samba from local'
 #sudo ufw allow out to 192.168.0.10 port 445
 sudo ufw allow out to 192.168.0.10 app samba comment 'samba from local'
+echo "multicast out"
+sudo ufw allow out proto udp to 224.0.0.0/24
 
 echo "dns in"
 #sudo ufw allow dns
