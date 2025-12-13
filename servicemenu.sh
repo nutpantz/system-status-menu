@@ -1,10 +1,10 @@
 #!/bin/bash
-# os tested debian -13
+# os tested debian 12 -13
 # title             :server tool script
 # description       :tigervnc-scraping-server, log in to the actual X session on display :0 , uncompliaced firewall for pia , check radicale, check other server tools
 # date              :2025
-# version           :0.1
-# notes             :install tigervnc-scraping-server w PIA VPN  ( with firewall on you will be totally blocked without tun0 vpn and local allowed in PIA)
+# version           :0.2
+# notes             :install tigervnc-scraping-server w PIA VPN  ( with firewall on you will be totally blocked without PIA running and local allowed in PIA)
 #
 SCRIPTNAME="fWVNC"  # What's the script name
 HOMEDIR=${HOME}  # Set home directory
@@ -185,7 +185,7 @@ while true; do
             #
              "mainmenu")
               echo "mainmenu"
-              mainmenu1
+              menuloop1
               ;; 
             "Option 5")
                 echo "You selected Option 5!"
@@ -411,7 +411,7 @@ while true; do
 #
              "mainmenu")
               echo "mainmenu"
-              mainmenu1
+              menuloop1
               ;; 
             "Option 6")
                 echo "You selected Option 6!"
@@ -460,7 +460,7 @@ if [[ $MENU_TITLE_LENGTH -gt $MENU_WIDTH ]]; then
 fi
 
 # Menu options
-options=("firewall up" "firewalldown" "firewall reset" "firewall disable" "firewall status" "mainmenu" "Option 7" "Option 8" "Option 9"  "Option 0" "Exit")
+options=("firewall up" "firewalldown" "firewall reset" "firewall disable" "firewall status" "mainmenu" "uwflog" "ufwlogclear" "Option 9"  "Option 0" "Exit")
 selected=0  # Index of the selected menu item
 
 # Function to display the menu
@@ -518,36 +518,48 @@ sudo ufw default deny incoming
 sudo ufw default deny outgoing
 #ssh
 echo "ssh in"
+sudo ufw allow out to 192.168.0.0/24 port 22
 sudo ufw allow from 192.168.0.0/24 to any port 22
-sudo ufw allow from 192.168.2.0/24 to any port 22
-sudo ufw allow from 192.168.1.0/24 to any port 22
+#sudo ufw allow from 192.168.2.0/24 to any port 22
+#sudo ufw allow from 192.168.1.0/24 to any port 22
 #vnc
 echo "vnc in"
 sudo ufw allow from 192.168.0.0/24 to any port 5900
-sudo ufw allow from 192.168.2.0/24 to any port 5900
+#sudo ufw allow from 192.168.2.0/24 to any port 5900
 sudo ufw allow from 192.168.0.0/24 to any port 5901
-sudo ufw allow from 192.168.2.0/24 to any port 5901
-sudo ufw allow from 192.168.1.0/24 to any port 5900
-sudo ufw allow from 192.168.1.0/24 to any port 5901
+#sudo ufw allow from 192.168.2.0/24 to any port 5901
+#sudo ufw allow from 192.168.1.0/24 to any port 5900
+#sudo ufw allow from 192.168.1.0/24 to any port 5901
 
 #radicale 
 echo "radicale in"
 sudo ufw allow from 192.168.0.0/24 to any port 5232 
-sudo ufw allow from 192.168.1.0/24 to any port 5232
+#sudo ufw allow from 192.168.1.0/24 to any port 5232
 #radicle
 #sudo ufw allow from 192.168.0.0/24 to any port 5232
 #sudo ufw allow from 192.168.2.0/24 to any port 5232
 #webdav
 echo "webdav in"
 sudo ufw allow from 192.168.0.0/24 to any port 8585
-sudo ufw allow from 192.168.1.0/24 to any port 8585
+#sudo ufw allow from 192.168.1.0/24 to any port 8585
 #qbit
 echo "qbit in"
 sudo ufw allow from 192.168.0.0/24 to any port 8080
-sudo ufw allow from 192.168.1.0/24 to any port 8080
+#sudo ufw allow from 192.168.1.0/24 to any port 8080
 #
+echo "web out"
+sudo ufw allow out to any port 80
+sudo ufw allow out to any port 443
+#sudo ufw allow out http
+#sudo ufw allow out https
+echo "allow samba"
+#sudo ufw allow from 192.168.0.0/24 to any app Samba  comment 'passing samba from local'
+#sudo ufw allow out to 192.168.0.10 port 445
+sudo ufw allow out to 192.168.0.10 app samba comment 'samba from local'
+
 echo "dns in"
-sudo ufw allow dns
+#sudo ufw allow dns
+sudo ufw allow out to any port 53
 #
 #tun0
 #only allows out on pia which is tun0
@@ -604,13 +616,15 @@ echo; read -rsn1 -p "Press any key to continue . . ."
             #
              "mainmenu")
               echo "mainmenu"
-              mainmenu1
+              menuloop1
               ;; 
-            "Option 7")
-                echo "You selected Option 7!"
+            "ufwlog")
+                echo "You selected ufwlog"
+                sudo dmesg | grep '\[UFW'
                 ;;
-            "Option 8")
-                echo "You selected Option 8!"
+            "ufwlogclear")
+                echo "You selected ufwlog clear"
+                sudo dmesg -c
                 ;;
             "Option 9")
                 echo "You selected Option 9!"
@@ -707,7 +721,7 @@ while true; do
             #
              "mainmenu")
               echo "mainmenu"
-              mainmenu1
+              menuloop1
               ;; 
             "Option 2")
                 echo "You selected Option 2!"
