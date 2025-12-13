@@ -3,7 +3,7 @@
 # title             :server tool script
 # description       :tigervnc-scraping-server, log in to the actual X session on display :0 , uncompliaced firewall for pia , check radicale, check other server tools
 # date              :2025
-# version           :0.2
+# version           :0.3
 # notes             :install tigervnc-scraping-server w PIA VPN  ( with firewall on you will be totally blocked without PIA running and local allowed in PIA)
 #
 SCRIPTNAME="fWVNC"  # What's the script name
@@ -518,38 +518,38 @@ sudo ufw default deny incoming
 sudo ufw default deny outgoing
 #ssh
 echo "ssh in"
-sudo ufw allow out to 192.168.0.0/24 port 22
-sudo ufw allow from 192.168.0.0/24 to any port 22
+sudo ufw allow out to 192.168.0.0/24 port 22 comment ' ssh'
+sudo ufw allow from 192.168.0.0/24 to any port 22 comment 'ssh '
 #sudo ufw allow from 192.168.2.0/24 to any port 22
 #sudo ufw allow from 192.168.1.0/24 to any port 22
 #vnc
 echo "vnc in"
-sudo ufw allow from 192.168.0.0/24 to any port 5900
+sudo ufw allow from 192.168.0.0/24 to any port 5900 comment ' vnc 0'
 #sudo ufw allow from 192.168.2.0/24 to any port 5900
-sudo ufw allow from 192.168.0.0/24 to any port 5901
+sudo ufw allow from 192.168.0.0/24 to any port 5901 comment 'vnc1 '
 #sudo ufw allow from 192.168.2.0/24 to any port 5901
 #sudo ufw allow from 192.168.1.0/24 to any port 5900
 #sudo ufw allow from 192.168.1.0/24 to any port 5901
 
 #radicale 
 echo "radicale in"
-sudo ufw allow from 192.168.0.0/24 to any port 5232 
+sudo ufw allow from 192.168.0.0/24 to any port 5232  comment 'radicale '
 #sudo ufw allow from 192.168.1.0/24 to any port 5232
 #radicle
 #sudo ufw allow from 192.168.0.0/24 to any port 5232
 #sudo ufw allow from 192.168.2.0/24 to any port 5232
 #webdav
 echo "webdav in"
-sudo ufw allow from 192.168.0.0/24 to any port 8585
+sudo ufw allow from 192.168.0.0/24 to any port 8585 comment 'webdav '
 #sudo ufw allow from 192.168.1.0/24 to any port 8585
 #qbit
 echo "qbit in"
-sudo ufw allow from 192.168.0.0/24 to any port 8080
+sudo ufw allow from 192.168.0.0/24 to any port 8080 comment 'qbit '
 #sudo ufw allow from 192.168.1.0/24 to any port 8080
 #
 echo "web out"
-sudo ufw allow out to any port 80
-sudo ufw allow out to any port 443
+sudo ufw allow out to any port 80 comment ' http'
+sudo ufw allow out to any port 443 comment ' https'
 #sudo ufw allow out http
 #sudo ufw allow out https
 echo "allow samba"
@@ -557,16 +557,16 @@ echo "allow samba"
 #sudo ufw allow out to 192.168.0.10 port 445
 sudo ufw allow out to 192.168.0.10 app samba comment 'samba from local'
 echo "multicast out"
-sudo ufw allow out proto udp to 224.0.0.0/24
+sudo ufw allow out proto udp to 224.0.0.0/24 comment 'multicast'
 
 echo "dns in"
 #sudo ufw allow dns
-sudo ufw allow out to any port 53
+sudo ufw allow out to any port 53 comment 'dns '
 #
 #tun0
 #only allows out on pia which is tun0
 echo "tun0"
-sudo ufw allow out on tun0 from any to any
+sudo ufw allow out on tun0 from any to any comment ' tun0'
 
 echo "turning it all on"
 sudo ufw enable
