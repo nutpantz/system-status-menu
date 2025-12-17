@@ -3,7 +3,7 @@
 # title             :server tool script
 # description       :tigervnc-scraping-server, log in to the actual X session on display :0 , uncompliaced firewall for pia , check radicale, check other server tools
 # date              :2025
-# version           :0.3
+# version           :0.4
 # notes             :install tigervnc-scraping-server w PIA VPN  ( with firewall on you will be totally blocked without PIA running and local allowed in PIA)
 #
 SCRIPTNAME="fWVNC"  # What's the script name
@@ -527,6 +527,8 @@ echo "vnc in"
 sudo ufw allow from 192.168.0.0/24 to any port 5900 comment ' vnc 0'
 #sudo ufw allow from 192.168.2.0/24 to any port 5900
 sudo ufw allow from 192.168.0.0/24 to any port 5901 comment 'vnc1 '
+sudo ufw allow out to 192.168.0.0/24 port 5900 comment ' vnc 0 out'
+sudo ufw allow out to 192.168.0.0/24 port 5901 comment 'vnc1 in'
 #sudo ufw allow from 192.168.2.0/24 to any port 5901
 #sudo ufw allow from 192.168.1.0/24 to any port 5900
 #sudo ufw allow from 192.168.1.0/24 to any port 5901
@@ -555,7 +557,7 @@ sudo ufw allow out to any port 443 comment ' https'
 echo "allow samba"
 #sudo ufw allow from 192.168.0.0/24 to any app Samba  comment 'passing samba from local'
 #sudo ufw allow out to 192.168.0.10 port 445
-sudo ufw allow out to 192.168.0.10 app samba comment 'samba from local'
+sudo ufw allow out to 192.168.0.10 app samba comment 'samba'
 echo "multicast out"
 sudo ufw allow out proto udp to 224.0.0.0/24 comment 'multicast'
 
