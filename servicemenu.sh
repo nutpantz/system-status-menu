@@ -3,7 +3,7 @@
 # title             :server tool script
 # description       :tigervnc-scraping-server, log in to the actual X session on display :0 , uncompliaced firewall for pia , check radicale, check other server tools
 # date              :2025
-# version           :0.4
+# version           :0.5
 # notes             :install tigervnc-scraping-server w PIA VPN  ( with firewall on you will be totally blocked without PIA running and local allowed in PIA)
 #
 SCRIPTNAME="fWVNC"  # What's the script name
@@ -218,6 +218,119 @@ while true; do
 
 done
 }
+#########################################################################
+# Menu title
+webdavmenu () {
+echo "lighttp menu(webdav)"
+MENU_TITLE="Use arrow keys to navigate, press Enter to select."
+MENU_TITLE_LENGTH=${#MENU_TITLE}
+if [[ $MENU_TITLE_LENGTH -gt $MENU_WIDTH ]]; then
+    MENU_WIDTH=$MENU_TITLE_LENGTH
+fi
+MENU_TITLE_LENGTH=$((MENU_TITLE_LENGTH + MENU_TITLE_PADDING * 2))
+if [[ $MENU_TITLE_LENGTH -gt $MENU_WIDTH ]]; then
+    MENU_WIDTH=$MENU_TITLE_LENGTH
+fi
+
+# Menu options
+options=("webdav status" "restart webdav" "start webdav" "mainmenu" "Option 5" "Option 6" "Option 7" "Option 8" "Option 9"  "Option 0" "Exit")
+selected=0  # Index of the selected menu item
+
+# Function to display the menu
+display_menu() {
+    clear
+    local term_width=$(tput cols)
+    local start_col=$(( (term_width - MENU_WIDTH) / 2 ))
+    local padding=$((MENU_WIDTH - MENU_TITLE_LENGTH))
+    local filler=$(printf '%*s' "$padding" '')
+    local title_filler=$(printf '%*s' "$MENU_TITLE_PADDING" '')
+    printf "\n\n"  # Add two empty rows above the menu title
+    printf "%${start_col}s" ""
+    echo -e "${MENU_TITLE_BG_COLOR}${MENU_TITLE_FG_COLOR}${title_filler}${MENU_TITLE}${title_filler}${FG_OFF}${BG_OFF}"
+    for i in "${!options[@]}"; do
+        local padding=$((MENU_WIDTH - ${#options[$i]} - 4))
+        local filler=$(printf '%*s' "$padding" '')
+        if [[ $i -eq $selected ]]; then
+            printf "%${start_col}s" ""  # Align to center
+            echo -e "${MENU_HIGHLIGHT_BG_COLOR}${MENU_HIGHLIGHT_FG_COLOR} > ${options[$i]} $filler ${FG_OFF}${BG_OFF}"
+        else
+            printf "%${start_col}s" ""  # Align to center
+            echo -e "${MENU_BG_COLOR}${MENU_FG_COLOR}   ${options[$i]} $filler ${FG_OFF}${BG_OFF}"
+        fi
+    done
+}
+
+# Capture keypresses
+while true; do
+    display_menu
+    read -rsn1 key  # Read a single key
+    if [[ $key == $'\x1b' ]]; then
+        read -rsn2 key  # Read the next two characters
+        if [[ $key == "[A" ]]; then  # Up arrow
+            ((selected--))
+            if [[ $selected -lt 0 ]]; then
+                selected=$((${#options[@]} - 1))
+            fi
+        elif [[ $key == "[B" ]]; then  # Down arrow
+            ((selected++))
+            if [[ $selected -ge ${#options[@]} ]]; then
+                selected=0
+            fi
+        fi
+    elif [[ $key == "" ]]; then  # Enter key
+        case ${options[$selected]} in
+            "webdav status")
+                echo "webdav status"
+                sudo systemctl status lighttpd
+                ;;
+            "restart webdav")
+                echo "restart webdav"
+                sudo systemctl restart lighttpd
+                ;;
+            "start webdav")
+                echo "start webdav"
+                sudo systemctl start lighttpd
+                ;;
+            #
+             "mainmenu")
+              echo "mainmenu"
+              menuloop1
+              ;; 
+            "Option 5")
+                echo "You selected Option 5!"
+                ;;
+            "Option 6")
+                echo "You selected Option 6!"
+                ;;
+            "Option 7")
+                echo "You selected Option 7!"
+                ;;
+            "Option 8")
+                echo "You selected Option 8!"
+                ;;
+            "Option 9")
+                echo "You selected Option 9!"
+                ;;
+            "Option 0")
+                echo "You selected Option 0!"
+                ;;
+            
+            "Exit")
+                echo "Exiting..."
+                echo -e "\033[?7h"  # Re-enable word wrapping
+                echo -e "\033[?25h"  # Show cursor
+                exit 0
+                ;;
+        esac
+        read -p "Press any key to continue..." -n1
+    fi
+
+done
+}
+######################################################################
+
+
+
 ######################################################################
 
 # vncmenu
@@ -542,11 +655,13 @@ sudo ufw allow from 192.168.0.0/24 to any port 5232  comment 'radicale '
 #sudo ufw allow from 192.168.2.0/24 to any port 5232
 #webdav
 echo "webdav in"
-sudo ufw allow from 192.168.0.0/24 to any port 8585 comment 'webdav '
+sudo ufw allow from 192.168.0.0/24 to any port 8585 comment 'webdav i'
+sudo ufw allow out to 192.168.0.0/24 port 8585 comment 'webdav x'
 #sudo ufw allow from 192.168.1.0/24 to any port 8585
 #qbit
 echo "qbit in"
-sudo ufw allow from 192.168.0.0/24 to any port 8080 comment 'qbit '
+sudo ufw allow from 192.168.0.0/24 to any port 8080 comment 'qbit i'
+sudo ufw allow out to 192.168.0.0/24 port 8080 comment 'qbit x'
 #sudo ufw allow from 192.168.1.0/24 to any port 8080
 #
 echo "web out"
@@ -666,7 +781,7 @@ if [[ $MENU_TITLE_LENGTH -gt $MENU_WIDTH ]]; then
 fi
 
 # Menu options
-options=("VNCmenu" "firewall menu" "Radicle Menu" "mainmenu" "Option 2" "Option 3" "Option 4" "Option 5" "Option 6" "Option 7" "Option 8" "Option 9"  "status" "Exit")
+options=("VNCmenu" "firewall menu" "Radicle Menu" "webdav menu" "mainmenu" "Option 3" "Option 4" "Option 5" "Option 6" "Option 7" "Option 8" "Option 9"  "status" "Exit")
 selected=0  # Index of the selected menu item
 
 # Function to display the menu
@@ -722,14 +837,16 @@ while true; do
         	"Radicle Menu")
             	radiclemenu
             	;;
+            "webdav menu")
+                echo "webdav menu"
+                webdavmenu
+                ;;	
             #
              "mainmenu")
               echo "mainmenu"
               menuloop1
               ;; 
-            "Option 2")
-                echo "You selected Option 2!"
-                ;;
+            
             "Option 3")
                 echo "You selected Option 3!"
                 ;;
