@@ -18,11 +18,11 @@ echo "$VNC1" #displaying var variable on terminal
 echo "$VNC2" #displaying var variable on terminal
 #vnc varibile
 VNCSERVER="/usr/bin/x0vncserver"   #Where the x0vncserver executable is located, default:
-INTERFACE=$"192.168.0.130"   # Set home ip
+INTERFACE=$"192.168.0.120"   # Set home ip
 VNCDIR="${HOMEDIR}/.vnc"   # Default VNC User directory
 LOGFILE="${VNCDIR}/logfile"   # Set log file for debugging
 PASSWDFILE="${VNCDIR}/passwd"   # The vnc passwd file. If it doesn't exist, you need to create it
-GEOMETRY="1280x720"   # What's the Geometry  -Geometry 1280x720 1920x1080
+GEOMETRY="1360x768"   # What's the Geometry  -Geometry 1280x720 1920x1080 1360x768
 DISPLAY=":0"  # Leave this on ":0", since we want to log in to the actual session
 VNCPORT="5900"    #Set the port (default 5900)
 # PID of the actual VNC server running
@@ -43,7 +43,7 @@ COLOR_RED=1
 COLOR_GREEN=2
 COLOR_YELLOW=3
 COLOR_BLUE=4
-COLOR_MAGENTA=5
+COLOR_MAGENTA=5	
 COLOR_CYAN=6
 COLOR_WHITE=7
 COLOR_OFF=9
@@ -328,6 +328,118 @@ while true; do
 done
 }
 ######################################################################
+#mpd menu#########################################################################
+# Menu title
+mpdmenu () {
+echo "mpd menu(music)"
+MENU_TITLE="Use arrow keys to navigate, press Enter to select."
+MENU_TITLE_LENGTH=${#MENU_TITLE}
+if [[ $MENU_TITLE_LENGTH -gt $MENU_WIDTH ]]; then
+    MENU_WIDTH=$MENU_TITLE_LENGTH
+fi
+MENU_TITLE_LENGTH=$((MENU_TITLE_LENGTH + MENU_TITLE_PADDING * 2))
+if [[ $MENU_TITLE_LENGTH -gt $MENU_WIDTH ]]; then
+    MENU_WIDTH=$MENU_TITLE_LENGTH
+fi
+
+# Menu options
+options=("mpd status" "restart mpd" "start mpd" "journal" "mainmenu" "Option 6" "Option 7" "Option 8" "Option 9"  "Option 0" "Exit")
+selected=0  # Index of the selected menu item
+
+# Function to display the menu
+display_menu() {
+    clear
+    local term_width=$(tput cols)
+    local start_col=$(( (term_width - MENU_WIDTH) / 2 ))
+    local padding=$((MENU_WIDTH - MENU_TITLE_LENGTH))
+    local filler=$(printf '%*s' "$padding" '')
+    local title_filler=$(printf '%*s' "$MENU_TITLE_PADDING" '')
+    printf "\n\n"  # Add two empty rows above the menu title
+    printf "%${start_col}s" ""
+    echo -e "${MENU_TITLE_BG_COLOR}${MENU_TITLE_FG_COLOR}${title_filler}${MENU_TITLE}${title_filler}${FG_OFF}${BG_OFF}"
+    for i in "${!options[@]}"; do
+        local padding=$((MENU_WIDTH - ${#options[$i]} - 4))
+        local filler=$(printf '%*s' "$padding" '')
+        if [[ $i -eq $selected ]]; then
+            printf "%${start_col}s" ""  # Align to center
+            echo -e "${MENU_HIGHLIGHT_BG_COLOR}${MENU_HIGHLIGHT_FG_COLOR} > ${options[$i]} $filler ${FG_OFF}${BG_OFF}"
+        else
+            printf "%${start_col}s" ""  # Align to center
+            echo -e "${MENU_BG_COLOR}${MENU_FG_COLOR}   ${options[$i]} $filler ${FG_OFF}${BG_OFF}"
+        fi
+    done
+}
+
+# Capture keypresses
+while true; do
+    display_menu
+    read -rsn1 key  # Read a single key
+    if [[ $key == $'\x1b' ]]; then
+        read -rsn2 key  # Read the next two characters
+        if [[ $key == "[A" ]]; then  # Up arrow
+            ((selected--))
+            if [[ $selected -lt 0 ]]; then
+                selected=$((${#options[@]} - 1))
+            fi
+        elif [[ $key == "[B" ]]; then  # Down arrow
+            ((selected++))
+            if [[ $selected -ge ${#options[@]} ]]; then
+                selected=0
+            fi
+        fi
+    elif [[ $key == "" ]]; then  # Enter key
+        case ${options[$selected]} in
+            "mpd status")
+                echo "mpd status"
+                systemctl --user status mpd
+                ;;
+            "restart mpd")
+                echo "restart mpd"
+                systemctl --user restart mpd
+                ;;
+            "start webdav")
+                echo "start mpd"
+                systemctl --user start mpd
+                ;;
+            #
+             "mainmenu")
+              echo "mainmenu"
+              menuloop1
+              ;; 
+            "journal")
+                echo "journal mpd"
+                journalctl --user -xeu mpd.service
+                ;;
+            "Option 6")
+                echo "You selected Option 6!"
+                ;;
+            "Option 7")
+                echo "You selected Option 7!"
+                ;;
+            "Option 8")
+                echo "You selected Option 8!"
+                ;;
+            "Option 9")
+                echo "You selected Option 9!"
+                ;;
+            "Option 0")
+                echo "You selected Option 0!"
+                ;;
+            
+            "Exit")
+                echo "Exiting..."
+                echo -e "\033[?7h"  # Re-enable word wrapping
+                echo -e "\033[?25h"  # Show cursor
+                exit 0
+                ;;
+        esac
+        read -p "Press any key to continue..." -n1
+    fi
+
+done
+}
+######################################################################
+
 
 
 
@@ -629,6 +741,9 @@ while true; do
 echo "deny all in-out"
 sudo ufw default deny incoming
 sudo ufw default deny outgoing
+#echo "UNREASL in"
+#sudo ufw allow from 192.168.0.0/24 to any port 28902  comment 'iunreal '
+#sudo ufw allow out to 192.168.0.0/24 port 28902 comment 'unreal o'
 #ssh
 echo "ssh in"
 sudo ufw allow out to 192.168.0.0/24 port 22 comment ' ssh'
@@ -645,7 +760,10 @@ sudo ufw allow out to 192.168.0.0/24 port 5901 comment 'vnc1 in'
 #sudo ufw allow from 192.168.2.0/24 to any port 5901
 #sudo ufw allow from 192.168.1.0/24 to any port 5900
 #sudo ufw allow from 192.168.1.0/24 to any port 5901
-
+#mpd
+echo "mpd in"
+sudo ufw allow from 192.168.0.0/24 to any port 6000  comment 'mpd in '
+sudo ufw allow out to 192.168.0.0/24 port 6000 comment 'mpd o'
 #radicale 
 echo "radicale in"
 sudo ufw allow from 192.168.0.0/24 to any port 5232  comment 'radicale '
@@ -673,9 +791,12 @@ echo "allow samba"
 #sudo ufw allow from 192.168.0.0/24 to any app Samba  comment 'passing samba from local'
 #sudo ufw allow out to 192.168.0.10 port 445
 sudo ufw allow out to 192.168.0.10 app samba comment 'samba'
+sudo ufw allow from 192.168.0.0/24 to any app samba comment 'sambain'
+sudo ufw allow out to 192.168.0.0/24 app samba comment 'sambaout'
+
 echo "multicast out"
 sudo ufw allow out proto udp to 224.0.0.0/24 comment 'multicast'
-
+sudo ufw allow from 224.0.0.0/24 to any proto udp comment 'multicast in'
 echo "dns in"
 #sudo ufw allow dns
 sudo ufw allow out to any port 53 comment 'dns '
@@ -781,7 +902,7 @@ if [[ $MENU_TITLE_LENGTH -gt $MENU_WIDTH ]]; then
 fi
 
 # Menu options
-options=("VNCmenu" "firewall menu" "Radicle Menu" "webdav menu" "mainmenu" "Option 3" "Option 4" "Option 5" "Option 6" "Option 7" "Option 8" "Option 9"  "status" "Exit")
+options=("VNCmenu" "firewall menu" "Radicle Menu" "webdav menu" "mpd menu" "mainmenu"  "Option 4" "Option 5" "Option 6" "Option 7" "Option 8" "Option 9"  "status" "Exit")
 selected=0  # Index of the selected menu item
 
 # Function to display the menu
@@ -841,15 +962,16 @@ while true; do
                 echo "webdav menu"
                 webdavmenu
                 ;;	
+                "mpd menu")
+                echo "mpd menu"
+                mpdmenu
+                ;;
             #
              "mainmenu")
               echo "mainmenu"
               menuloop1
               ;; 
-            
-            "Option 3")
-                echo "You selected Option 3!"
-                ;;
+                       
             "Option 4")
                 echo "You selected Option 4!"
                 ;;
