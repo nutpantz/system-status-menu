@@ -886,8 +886,123 @@ echo; read -rsn1 -p "Press any key to continue . . ."
 done
 }
 
+######################################################################
+
+# update upgrage menu
+#######################################################################
+# Menu title
+menuupdateupgrade () {
+MENU_TITLE="Use arrow keys to navigate, press Enter to select."
+MENU_TITLE_LENGTH=${#MENU_TITLE}
+if [[ $MENU_TITLE_LENGTH -gt $MENU_WIDTH ]]; then
+    MENU_WIDTH=$MENU_TITLE_LENGTH
+fi
+MENU_TITLE_LENGTH=$((MENU_TITLE_LENGTH + MENU_TITLE_PADDING * 2))
+if [[ $MENU_TITLE_LENGTH -gt $MENU_WIDTH ]]; then
+    MENU_WIDTH=$MENU_TITLE_LENGTH
+fi
+MENU_TITLE2="Upgrade and update menu"
+MENU_TITLE_LENGTH2=${#MENU_TITLE2}
+if [[ $MENU_TITLE_LENGTH2 -gt $MENU_WIDTH2 ]]; then
+    MENU_WIDTH2=$MENU_TITLE_LENGTH2
+fi
+MENU_TITLE_LENGTH2=$((MENU_TITLE_LENGTH2 + MENU_TITLE_PADDING2 * 2))
+if [[ $MENU_TITLE_LENGTH2 -gt $MENU_WIDTH2 ]]; then
+    MENU_WIDTH2=$MENU_TITLE_LENGTH2
+fi
+
+# Menu options
+options=("update" "list" "upgrade" "autoremove" "Exit")
+selected=0  # Index of the selected menu item
+
+# Function to display the menu
+display_menu() {
+    clear
+    local term_width=$(tput cols)
+    local start_col=$(( (term_width - MENU_WIDTH2) / 2 ))
+    local padding=$((MENU_WIDTH2 - MENU_TITLE_LENGTH2))
+    local filler=$(printf '%*s' "$padding" '')
+    local title_filler=$(printf '%*s' "$MENU_TITLE_PADDING" '')
+    printf "\n\n"  # Add two empty rows above the menu title
+    printf "%${start_col}s" ""
+    echo -e "${MENU_TITLE_BG_COLOR}${MENU_TITLE_FG_COLOR}${title_filler}${MENU_TITLE2}${title_filler}${FG_OFF}${BG_OFF}"
+    #########
+    local term_width=$(tput cols)
+    local start_col=$(( (term_width - MENU_WIDTH) / 2 ))
+    local padding=$((MENU_WIDTH - MENU_TITLE_LENGTH))
+    local filler=$(printf '%*s' "$padding" '')
+    local title_filler=$(printf '%*s' "$MENU_TITLE_PADDING" '')
+    printf "\n\n"  # Add two empty rows above the menu title
+    printf "%${start_col}s" ""
+    echo -e "${MENU_TITLE_BG_COLOR}${MENU_TITLE_FG_COLOR}${title_filler}${MENU_TITLE}${title_filler}${FG_OFF}${BG_OFF}"
+    for i in "${!options[@]}"; do
+        local padding=$((MENU_WIDTH - ${#options[$i]} - 4))
+        local filler=$(printf '%*s' "$padding" '')
+        if [[ $i -eq $selected ]]; then
+            printf "%${start_col}s" ""  # Align to center
+            echo -e "${MENU_HIGHLIGHT_BG_COLOR}${MENU_HIGHLIGHT_FG_COLOR} > ${options[$i]} $filler ${FG_OFF}${BG_OFF}"
+        else
+            printf "%${start_col}s" ""  # Align to center
+            echo -e "${MENU_BG_COLOR}${MENU_FG_COLOR}   ${options[$i]} $filler ${FG_OFF}${BG_OFF}"
+        fi
+    done
+}
+
+# Capture keypresses
+while true; do
+    display_menu
+    read -rsn1 key  # Read a single key
+    if [[ $key == $'\x1b' ]]; then
+        read -rsn2 key  # Read the next two characters
+        if [[ $key == "[A" ]]; then  # Up arrow
+            ((selected--))
+            if [[ $selected -lt 0 ]]; then
+                selected=$((${#options[@]} - 1))
+            fi
+        elif [[ $key == "[B" ]]; then  # Down arrow
+            ((selected++))
+            if [[ $selected -ge ${#options[@]} ]]; then
+                selected=0
+            fi
+        fi
+    elif [[ $key == "" ]]; then  # Enter key
+        case ${options[$selected]} in
+            "update")
+                echo "You selected update repos"
+             lxqt-sudo apt update 
+             sleep 3
+             apt list --upgradable
+             sleep 5
+                ;;
+            "list")
+                echo "You selected list upgrrades!"
+                apt list --upgradable
+                ;;
+            "upgrade")
+                echo "You selected upgrade!"
+                lxqt-sudo apt upgrade
+                ;;
+            "autoremove")
+                echo "You selected autoremove!"
+                lxqt-sudo sudo apt autoremove
+                ;;
+                
+            "Exit")
+                echo "Exiting..."
+                echo -e "\033[?7h"  # Re-enable word wrapping
+                echo -e "\033[?25h"  # Show cursor
+                exit 0
+                ;;
+        esac
+        read -p "Press any key to continue..." -n1
+    fi
+
+done
+}
+######################################################################
+
 # main menu
-####################################################
+######################################################################
 # Menu title
 menuloop1 () {
 echo "main menu"
@@ -962,9 +1077,13 @@ while true; do
                 echo "webdav menu"
                 webdavmenu
                 ;;	
-                "mpd menu")
+            "mpd menu")
                 echo "mpd menu"
                 mpdmenu
+                ;;
+			"updateupgrade")
+                echo "update upgrade repos"
+                menuupdateupgrade
                 ;;
             #
              "mainmenu")
